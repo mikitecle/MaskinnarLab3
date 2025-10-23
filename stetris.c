@@ -8,6 +8,11 @@
 #include <string.h>
 #include <time.h>
 #include <poll.h>
+#include <stdint.h>     // for uint16_t
+#include <fcntl.h>      // for open(), O_RDWR, O_NONBLOCK
+#include <sys/mman.h>   // for mmap, munmap, PROT_READ, PROT_WRITE, MAP_SHARED
+#include <unistd.h>     // for close(), read()
+
 
 // The game state can be used to detect what happens on the playfield
 #define GAMEOVER 0
