@@ -65,6 +65,8 @@ gameConfig game = {
 
 static int fbfd = -1;          // file descriptor for framebufferet
 static uint16_t *fbp = NULL;   // peker til minnet (framebuffer)
+static int jsfd = -1;      // file descriptor for joystick input
+
 
 // This function is called on the start of your application
 // Here you can initialize what ever you need for your task
@@ -108,10 +110,7 @@ bool initializeSenseHat()
 
     fprintf(stderr, "ERROR: Could not find RPi-Sense FB\n");
     
-     // Nå: let etter joystick
-    FILE *f;
-    char path[64];
-    char name[128];
+
 
     for (int i = 0; i < 32; i++) { // sjekk event0, event1, ...
         snprintf(path, sizeof(path), "/sys/class/input/event%d/device/name", i);
@@ -165,6 +164,9 @@ void freeSenseHat() {
 // KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, with the respective direction
 // and KEY_ENTER, when the the joystick is pressed
 // !!! when nothing was pressed you MUST return 0 !!!
+
+static inline bool tileOccupied(coord const target);
+
 int readSenseHatJoystick() {
     if (jsfd < 0)
         return 0;
