@@ -112,26 +112,26 @@ bool initializeSenseHat()
     
 
 
-    for (int i = 0; i < 32; i++) { // sjekk event0, event1, ...
-        snprintf(path, sizeof(path), "/sys/class/input/event%d/device/name", i);
-        f = fopen(path, "r");
-        if (!f) continue;
+    for (int i = 0; i < 32; i++) { // sjekk input0, input1, ...
+    snprintf(path, sizeof(path), "/sys/class/input/input%d/name", i);
+    f = fopen(path, "r");
+    if (!f) continue;
 
-        if (fgets(name, sizeof(name), f)) {
-            if (strstr(name, "Raspberry Pi Sense HAT Joystick")) {
-                snprintf(path, sizeof(path), "/dev/input/event%d", i);
-                jsfd = open(path, O_RDONLY | O_NONBLOCK);
-                if (jsfd < 0) {
-                    perror("open joystick");
-                    fclose(f);
-                    return false;
-                }
+    if (fgets(name, sizeof(name), f)) {
+        if (strstr(name, "Raspberry Pi Sense HAT Joystick")) {
+            snprintf(path, sizeof(path), "/dev/input/event%d", i);
+            jsfd = open(path, O_RDONLY | O_NONBLOCK);
+            if (jsfd < 0) {
+                perror("open joystick");
                 fclose(f);
-                return true;
+                return false;
             }
+            fclose(f);
+            return true;
         }
-        fclose(f);
     }
+    fclose(f);
+}
 
     fprintf(stderr, "ERROR: Could not find Sense HAT Joystick\n");
     return false;
