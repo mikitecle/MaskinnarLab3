@@ -102,7 +102,7 @@ bool initializeSenseHat()
                 }
 
                 fclose(f);
-                return true;
+                //return true;
             }
         }
         fclose(f);
