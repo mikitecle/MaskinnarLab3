@@ -58,28 +58,134 @@ gameConfig game = {
     .initNextGameTick = 50,
 };
 
+static int fbfd = -1;          // file descriptor for framebufferet
+static uint16_t *fbp = NULL;   // peker til minnet (framebuffer)
+
 // This function is called on the start of your application
 // Here you can initialize what ever you need for your task
 // return false if something fails, else true
 bool initializeSenseHat()
 {
-    return true;
+    char path[64];
+    char name[64];
+    FILE *f;
+
+        for (int i = 0; i < 10; i++) {
+        snprintf(path, sizeof(path), "/sys/class/graphics/fb%d/name", i);
+        f = fopen(path, "r");
+        if (!f) continue;
+
+        if (fgets(name, sizeof(name), f)) {
+            if (strstr(name, "RPi-Sense FB")) {
+                // Vi fant riktig framebuffer
+                snprintf(path, sizeof(path), "/dev/fb%d", i);
+                fbfd = open(path, O_RDWR);
+                if (fbfd < 0) {
+                    perror("open framebuffer");
+                    fclose(f);
+                    return false;
+                }
+
+                // mmap hele framebufferet (8x8 piksler, 2 byte hver = 128 byte)
+                fbp = mmap(NULL, 128, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
+                if (fbp == MAP_FAILED) {
+                    perror("mmap framebuffer");
+                    close(fbfd);
+                    return false;
+                }
+
+                fclose(f);
+                return true;
+            }
+        }
+        fclose(f);
+    }
+
+    fprintf(stderr, "ERROR: Could not find RPi-Sense FB\n");
+    
+     // Nå: let etter joystick
+    FILE *f;
+    char path[64];
+    char name[128];
+
+    for (int i = 0; i < 32; i++) { // sjekk event0, event1, ...
+        snprintf(path, sizeof(path), "/sys/class/input/event%d/device/name", i);
+        f = fopen(path, "r");
+        if (!f) continue;
+
+        if (fgets(name, sizeof(name), f)) {
+            if (strstr(name, "Raspberry Pi Sense HAT Joystick")) {
+                snprintf(path, sizeof(path), "/dev/input/event%d", i);
+                jsfd = open(path, O_RDONLY | O_NONBLOCK);
+                if (jsfd < 0) {
+                    perror("open joystick");
+                    fclose(f);
+                    return false;
+                }
+                fclose(f);
+                return true;
+            }
+        }
+        fclose(f);
+    }
+
+    fprintf(stderr, "ERROR: Could not find Sense HAT Joystick\n");
+    return false;
+    
+    
 }
+
+
+
 
 // This function is called when the application exits
 // Here you can free up everything that you might have opened/allocated
-void freeSenseHat()
-{
+void freeSenseHat() {
+    if (fbp && fbp != MAP_FAILED) {
+        munmap(fbp, 128);
+        fbp = NULL;
+    }
+    if (fbfd >= 0) {
+        close(fbfd);
+        fbfd = -1;
+    }
+    if (jsfd >= 0) {
+        close(jsfd);
+        jsfd = -1;
+    }
 }
+
 
 // This function should return the key that corresponds to the joystick press
 // KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, with the respective direction
 // and KEY_ENTER, when the the joystick is pressed
 // !!! when nothing was pressed you MUST return 0 !!!
-int readSenseHatJoystick()
-{
+int readSenseHatJoystick() {
+    if (jsfd < 0)
+        return 0;
+
+    struct pollfd pfd = { .fd = jsfd, .events = POLLIN };
+    int ret = poll(&pfd, 1, 0);
+    if (ret <= 0)
+        return 0;
+
+    struct input_event ev;
+    ssize_t r = read(jsfd, &ev, sizeof(ev));
+    if (r != sizeof(ev))
+        return 0;
+
+    if (ev.type == EV_KEY && ev.value == 1) { // bare key press
+        switch (ev.code) {
+            case KEY_UP:    return KEY_UP;
+            case KEY_DOWN:  return KEY_DOWN;
+            case KEY_LEFT:  return KEY_LEFT;
+            case KEY_RIGHT: return KEY_RIGHT;
+            case KEY_ENTER: return KEY_ENTER;
+        }
+    }
     return 0;
 }
+
 
 // This function should render the gamefield on the LED matrix. It is called
 // every game tick. The parameter playfieldChanged signals whether the game logic
@@ -87,7 +193,26 @@ int readSenseHatJoystick()
 void renderSenseHatMatrix(bool const playfieldChanged)
 {
     (void)playfieldChanged;
+
+    
+    if (!playfieldChanged) return;
+
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            coord tilePos = {x, y};
+            if (tileOccupied(tilePos)) {
+                // Sett en farge (her: grønn = 0x07E0)
+                fbp[y * 8 + x] = 0x07E0;
+            } else {
+                // Sett svart
+                fbp[y * 8 + x] = 0x0000;
+            }
+        }
+    }
 }
+
+
+
 
 // The game logic uses only the following functions to interact with the playfield.
 // if you choose to change the playfield or the tile structure, you might need to
