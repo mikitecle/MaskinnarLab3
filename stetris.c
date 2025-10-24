@@ -207,7 +207,7 @@ int readSenseHatJoystick() {
 #define LED_COLOR_CYAN 0x07FF
 #define LED_COLOR_MAGENTA 0xF81F
 
-static const uint16_t colors[] = [LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA];
+static const uint16_t colors[] = {LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA};
 
 
 
@@ -355,7 +355,7 @@ bool clearRow()
         resetRow(0);
         return true;
     }
-    rdveturn false;
+    return false;
 }
 
 void advanceLevel()
