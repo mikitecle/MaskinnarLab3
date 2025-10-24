@@ -242,7 +242,7 @@ void renderSenseHatMatrix(bool const playfieldChanged)
 static inline void newTile(coord const target)
 {
     game.playfield[target.y][target.x].occupied = true;
-    game.playfield[target.y][target.x].color = colors[(rand() % 6)];
+    game.playfield[target.y][target.x].color = colors[rand() % (sizeof(colors)/sizeof(colors[0]))];   // tilfeldig farge
 }
 
 static inline void copyTile(coord const to, coord const from)
@@ -463,6 +463,8 @@ bool sTetris(int const key)
     if ((game.state == GAMEOVER) && key)
     {
         playfieldChanged = true;
+        srand(time(NULL));
+
         newGame();
         addNewTile();
         game.state |= TILE_ADDED;
@@ -615,7 +617,7 @@ int main(int argc, char **argv)
             // reading the inputs from stdin. However, we expect you to read the inputs directly
             // from the input device and not from stdin (you should implement the readSenseHatJoystick
             // method).
-            //key = readKeyboard();
+            key = readKeyboard();
         }
         if (key == KEY_ENTER)
             break;
