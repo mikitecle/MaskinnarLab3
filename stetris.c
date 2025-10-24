@@ -223,7 +223,7 @@ void renderSenseHatMatrix(bool const playfieldChanged)
             coord tilePos = {x, y};
             if (tileOccupied(tilePos)) {
                 // Sett en farge fra tile strukturen
-                fbp[y * 8 + x] = game.playfield[y][x].color;
+                fbp[y * 8 + x] = game.playfield[tilePos.y][tilePos.x].color;
             } else {
                 // Sett svart
                 fbp[y * 8 + x] = 0x0000;
