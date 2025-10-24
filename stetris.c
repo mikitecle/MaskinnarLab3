@@ -101,7 +101,7 @@ bool initializeSenseHat()
                     return false;
                 }
 
-                fclose(f);
+                //fclose(f);
                 //return true;
             }
         }
