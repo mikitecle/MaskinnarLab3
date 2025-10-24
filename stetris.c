@@ -206,7 +206,7 @@ int readSenseHatJoystick() {
 #define LED_COLOR_CYAN 0x07FF
 #define LED_COLOR_MAGENTA 0xF81F
 
-colors = [LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA];
+int colors = [LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA];
 
 
 
@@ -222,7 +222,7 @@ void renderSenseHatMatrix(bool const playfieldChanged)
             coord tilePos = {x, y};
             if (tileOccupied(tilePos)) {
                 // Sett en tilfeldig farge for okkuperte fliser
-                fbp[y * 8 + x] = colors[y%6 + x%6];
+                fbp[y * 8 + x] = colors[((y+6) * x) % 6];
             } else {
                 // Sett svart
                 fbp[y * 8 + x] = 0x0000;
