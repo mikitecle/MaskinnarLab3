@@ -25,7 +25,7 @@
 typedef struct
 {
     bool occupied;
-    uint16_t color;
+    uint16_t color; // lettere senere for å holde samme farge på en tile
 } tile;
 
 typedef struct
@@ -74,20 +74,20 @@ static int jsfd = -1;      // file descriptor for joystick input
 // return false if something fails, else true
 bool initializeSenseHat()
 {
-    char path[64];
-    char name[64];
-    FILE *f;
+    char path[64]; // vi lager et buffer hvor path til filene kan lagres
+    char name[64];//buffer for å lese navnet 
+    FILE *f; // en peker til en fil
 
-        for (int i = 0; i < 10; i++) {
-        snprintf(path, sizeof(path), "/sys/class/graphics/fb%d/name", i);
-        f = fopen(path, "r");
+        for (int i = 0; i < 10; i++) { // vi sjekker framebuffer fram til 10, i dokumentasjonen står det at det kan være flere ??
+        snprintf(path, sizeof(path), "/sys/class/graphics/fb%d/name", i); //skriver path-en til filen i path_bufferen
+        f = fopen(path, "r"); //åpner lesing av filen og peker på dette, virker som dette er som fopen i python
         if (!f) continue;
 
-        if (fgets(name, sizeof(name), f)) {
-            if (strstr(name, "RPi-Sense FB")) {
+        if (fgets(name, sizeof(name), f)) { //leser navnet fra fila og lagrer i name buffer
+            if (strstr(name, "RPi-Sense FB")) { //sjekker om navnet i filen inneholder "RPi-Sense FB"
                 // Vi fant riktig framebuffer
-                snprintf(path, sizeof(path), "/dev/fb%d", i);
-                fbfd = open(path, O_RDWR);
+                snprintf(path, sizeof(path), "/dev/fb%d", i); //legger dette i path bufferen
+                fbfd = open(path, O_RDWR); // åpner framebufferet for lesing og skriving
                 if (fbfd < 0) {
                     perror("open framebuffer");
                     fclose(f);
@@ -95,7 +95,7 @@ bool initializeSenseHat()
                 }
 
                 // mmap hele framebufferet (8x8 piksler, 2 byte hver = 128 byte)
-                fbp = mmap(NULL, 128, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
+                fbp = mmap(NULL, 128, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0); //mapper framebufferet til minnet
                 if (fbp == MAP_FAILED) {
                     perror("mmap framebuffer");
                     close(fbfd);
@@ -146,15 +146,15 @@ bool initializeSenseHat()
 // This function is called when the application exits
 // Here you can free up everything that you might have opened/allocated
 void freeSenseHat() {
-    if (fbp && fbp != MAP_FAILED) {
-        munmap(fbp, 128);
+    if (fbp != MAP_FAILED) { 
+        munmap(fbp, 128); //frigir minnet som er mappet til framebufferet
         fbp = NULL;
     }
-    if (fbfd >= 0) {
+    if (fbfd != -1) {
         close(fbfd);
         fbfd = -1;
     }
-    if (jsfd >= 0) {
+    if (jsfd != -1) {
         close(jsfd);
         jsfd = -1;
     }
@@ -169,13 +169,13 @@ void freeSenseHat() {
 static inline bool tileOccupied(coord const target);
 
 int readSenseHatJoystick() {
-    if (jsfd < 0)
+    if (jsfd < 0) //dummy sjekk
         return 0;
 
-    struct pollfd pfd = { .fd = jsfd, .events = POLLIN };
-    int ret = poll(&pfd, 1, 0);
+    struct pollfd pfd = { .fd = jsfd, .events = POLLIN }; // peker til file descriptoren til joystick som skal brukes i poll
+    int ret = poll(&pfd, 1, 0); //poll sjekker om det er data å lese på jsfd, hvis ja så går til å reade event
     if (ret <= 0)
-        return 0;
+        return 0;//ingenting å lese return 0
 
     struct input_event ev;
     ssize_t r = read(jsfd, &ev, sizeof(ev));
