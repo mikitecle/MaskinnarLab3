@@ -197,6 +197,19 @@ int readSenseHatJoystick() {
 // This function should render the gamefield on the LED matrix. It is called
 // every game tick. The parameter playfieldChanged signals whether the game logic
 // has changed the playfield
+
+#define LED_COLOR_GREEN 0x07E0
+#define LED_COLOR_RED 0xF800
+#define LED_COLOR_BLUE 0x001F
+#define LED_COLOR_BLACK 0x0000
+#define LED_COLOR_YELLOW 0xFFE0
+#define LED_COLOR_CYAN 0x07FF
+#define LED_COLOR_MAGENTA 0xF81F
+
+colors = [LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA];
+
+
+
 void renderSenseHatMatrix(bool const playfieldChanged)
 {
     (void)playfieldChanged;
@@ -208,8 +221,8 @@ void renderSenseHatMatrix(bool const playfieldChanged)
         for (int x = 0; x < 8; x++) {
             coord tilePos = {x, y};
             if (tileOccupied(tilePos)) {
-                // Sett en farge (her: grønn = 0x07E0)
-                fbp[y * 8 + x] = 0x07E0;
+                // Sett en tilfeldig farge for okkuperte fliser
+                fbp[y * 8 + x] = colors[y%6 + x%6];
             } else {
                 // Sett svart
                 fbp[y * 8 + x] = 0x0000;
