@@ -25,6 +25,7 @@
 typedef struct
 {
     bool occupied;
+    uint16_t color;
 } tile;
 
 typedef struct
@@ -206,7 +207,7 @@ int readSenseHatJoystick() {
 #define LED_COLOR_CYAN 0x07FF
 #define LED_COLOR_MAGENTA 0xF81F
 
-static const uint16_t colors[] = {LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA};
+static const uint16_t colors[] = [LED_COLOR_GREEN, LED_COLOR_RED, LED_COLOR_BLUE, LED_COLOR_YELLOW, LED_COLOR_CYAN, LED_COLOR_MAGENTA];
 
 
 
@@ -221,8 +222,8 @@ void renderSenseHatMatrix(bool const playfieldChanged)
         for (int x = 0; x < 8; x++) {
             coord tilePos = {x, y};
             if (tileOccupied(tilePos)) {
-                // Sett en tilfeldig farge for okkuperte fliser
-                fbp[y * 8 + x] = colors[((y+6) * x) % 6];
+                // Sett en farge fra tile strukturen
+                fbp[y * 8 + x] = game.playfield[y][x].color;
             } else {
                 // Sett svart
                 fbp[y * 8 + x] = 0x0000;
@@ -241,6 +242,7 @@ void renderSenseHatMatrix(bool const playfieldChanged)
 static inline void newTile(coord const target)
 {
     game.playfield[target.y][target.x].occupied = true;
+    game.playfield[target.y][target.x].color = colors[(rand() % 6)];
 }
 
 static inline void copyTile(coord const to, coord const from)
@@ -353,7 +355,7 @@ bool clearRow()
         resetRow(0);
         return true;
     }
-    return false;
+    rdveturn false;
 }
 
 void advanceLevel()
